@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.DemoTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-03-04T14:24:16" hostname="adinstt-Latitude-7480" time="0.049">
+  <properties/>
+  <testcase name="testItWorks()" classname="com.example.DemoTest" time="0.049"/>
+  <system-out><![CDATA[?[36m19:54:15.324?[0;39m ?[1;30m[Test worker]?[0;39m ?[34mINFO ?[0;39m ?[35mi.m.c.DefaultApplicationContext$RuntimeConfiguredEnvironment?[0;39m - Established active environments: [test]
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
