@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 public class S3Controller {
 
     @Inject
-    @Singleton // Ensure only one instance exists
+    @Singleton // Used this as there are many instances for s3 client
     private S3Client s3Client;
 
 
@@ -55,7 +55,7 @@ public class S3Controller {
         ListObjectsV2Response response = s3Client.listObjectsV2(request);
 
         return response.contents().stream()
-                .map(S3Object::key) // Get object names (filenames)
+                .map(S3Object::key) 
                 .collect(Collectors.toList());
     }
 }
