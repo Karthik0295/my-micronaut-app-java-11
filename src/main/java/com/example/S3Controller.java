@@ -3,6 +3,7 @@ package com.example;
 import io.micronaut.http.MediaType;
 import io.micronaut.http.annotation.Controller;
 import io.micronaut.http.annotation.Get;
+import io.micronaut.http.annotation.Part;
 import io.micronaut.http.annotation.Post;
 import io.micronaut.http.multipart.CompletedFileUpload;
 import jakarta.inject.Inject;
@@ -13,6 +14,8 @@ import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.core.sync.RequestBody;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import java.io.IOException;
 import java.util.List;
@@ -26,25 +29,59 @@ public class S3Controller {
     private S3Client s3Client;
 
 
-    private static final String BUCKET_NAME = "micronaut-s3";
+    private static final String BUCKET_NAME = "onyxsopworkflow";
 
     @Post(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA)
     public String uploadFile(CompletedFileUpload file) {
-        try {
-            s3Client.putObject(
-                PutObjectRequest.builder()
-                    .bucket(BUCKET_NAME)
-                    .key(file.getFilename())
-                    .contentType(file.getContentType().map(MediaType::toString).orElse("application/octet-stream"))
-                    .build(),
-                RequestBody.fromBytes(file.getBytes())
-            );
+    try {
+        // Get current date as string in yyyy-MM-dd format
+        String currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
-            return "File uploaded successfully: " + file.getFilename();
-        } catch (IOException e) {
-            return "Error uploading file: " + e.getMessage();
-        }
+        // Build the S3 key
+        String s3Key = String.format("%s/SOP/WPB/Hand Delivered/%s", currentDate, file.getFilename());
+
+        s3Client.putObject(
+            PutObjectRequest.builder()
+                .bucket(BUCKET_NAME)
+                .key(s3Key)
+                .contentType(file.getContentType().map(MediaType::toString).orElse("application/octet-stream"))
+                .build(),
+            RequestBody.fromBytes(file.getBytes())
+        );
+
+        return "File uploaded successfully: " + s3Key;
+    } catch (IOException e) {
+        return "Error uploading file: " + e.getMessage();
     }
+}
+
+    @Post(value = "/uploadmultiple", consumes = MediaType.MULTIPART_FORM_DATA)
+    public List<String> uploadMultipleFiles(@Part List<CompletedFileUpload> files) {
+        if (files == null || files.isEmpty()) {
+            return List.of("No files received!");
+        }
+
+        System.out.println("Received files: " + files.size()); // Debugging line
+
+        return files.stream().map(file -> {
+            try {
+                s3Client.putObject(
+                    PutObjectRequest.builder()
+                        .bucket(BUCKET_NAME)
+                        .key(file.getFilename()) 
+                        .contentType(file.getContentType().map(MediaType::toString).orElse("application/octet-stream"))
+                        .build(),
+                    RequestBody.fromBytes(file.getBytes())
+                );
+                return "File uploaded successfully: " + file.getFilename();
+            } catch (IOException e) {
+                return "Error uploading file: " + file.getFilename() + " -> " + e.getMessage();
+            }
+        }).collect(Collectors.toList());
+    }
+
+
+
 
     @Get("/list")
     public List<String> listFiles() {
