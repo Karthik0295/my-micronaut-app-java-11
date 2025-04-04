@@ -1,0 +1,30 @@
+micronaut:
+  application:
+    name: demo
+  server:
+    cors:
+      enabled: true
+      configurations:
+        default:
+          allowed-origins:
+            - "http://localhost:<port>" # Change this to match your Vue.js frontend URL
+          allowed-methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - OPTIONS
+          allowed-headers:
+            - Content-Type
+            - Authorization
+          allow-credentials: true
+
+netty:
+  default:
+    allocator:
+      max-order: 3
+
+aws:
+  accessKeyId: 
+  secretAccessKey: 
+  region: 

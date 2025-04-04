@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "S3 Event Trigger Setup, Lambda and DynamoDB"
+
+Resources:
+  # Lambda function triggered by S3 events
+  S3EventHandler:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: SttCCNS3EventHandler
+      CodeUri: .
+      Handler: com.example.S3EventHandler::handleRequest
+      Runtime: java11
+      MemorySize: 512
+      Timeout: 15
+      Architectures:
+        - x86_64
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Scan
+              Resource:
+                - !GetAtt SopEventDyanmoTable.Arn
+
+      Events:
+        S3Event:
+          Type: S3
+          Properties:
+            Bucket:
+              Ref: SttCCNEventBucket
+            Events:
+              - s3:ObjectCreated:*
+
+  # S3 bucket for PDF files
+  SttCCNEventBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: sttccneventbucket
+      VersioningConfiguration:
+        Status: Enabled
+
+  # DynamoDB Table
+  SopEventDyanmoTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: stt-ccn-s3-event-dynamo-table
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: UserId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+        - AttributeName: UserId
+          KeyType: RANGE
+
+
+Outputs:
+  LambdaFunctionArn:
+    Description: "ARN of the Lambda function"
+    Value: !GetAtt S3EventHandler.Arn
+
+  DynamoDBTableName:
+    Description: "DynamoDB table name"
+    Value: !Ref SopEventDyanmoTable
